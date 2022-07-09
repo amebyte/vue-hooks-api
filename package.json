@@ -1,6 +1,6 @@
 {
   "name": "vue-hooks-api",
-  "version": "0.0.0-beta.1",
+  "version": "0.0.0-beta.2",
   "description": "Experimental React hooks implementation in Vue3",
   "main": "dist/vue-hooks-api.cjs.js",
   "module": "dist/vue-hooks-api.esm.js",
