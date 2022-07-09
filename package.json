@@ -4,6 +4,12 @@
   "description": "Experimental React hooks implementation in Vue3",
   "main": "dist/vue-hooks-api.cjs.js",
   "module": "dist/vue-hooks-api.esm.js",
+  "files": [
+      "dist/vue-hooks-api.cjs.js",
+      "dist/vue-hooks-api.esm.js",
+      "package.json",
+      "README.md"
+  ],
   "scripts": {
     "test": "jest",
     "build": "rollup -c rollup.config.js"
