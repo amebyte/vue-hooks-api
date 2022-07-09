@@ -54,6 +54,10 @@ function updateWorkInProgressHook() {
   return hook;
 }
 
+export function useState(initalState: any) {
+    return useReducer(null, initalState);
+}
+
 export function useReducer(reducer: any, initalState: any) {
   const hook = updateWorkInProgressHook();
 
