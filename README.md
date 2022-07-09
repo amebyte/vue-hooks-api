@@ -1,5 +1,5 @@
 # vue-hooks-api
-Experimental React hooks implementation in Vue
+Experimental React hooks implementation in Vue3
 
 ### install
 
