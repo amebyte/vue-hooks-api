@@ -26,7 +26,8 @@
     "vue3-hooks",
     "useState",
     "useEffect",
-    "useLayoutEffect"],
+    "useLayoutEffect"
+  ],
   "author": "Cobyte",
   "license": "MIT",
   "bugs": {
