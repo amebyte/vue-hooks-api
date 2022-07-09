@@ -1,0 +1,43 @@
+{
+  "name": "vue-hooks-api",
+  "version": "0.0.0-beta.1",
+  "description": "Experimental React hooks implementation in Vue3",
+  "main": "dist/vue-hooks-api.cjs.js",
+  "module": "dist/vue-hooks-api.esm.js",
+  "scripts": {
+    "test": "jest",
+    "build": "rollup -c rollup.config.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amebyte/vue-hooks-api.git"
+  },
+  "keywords": [    
+    "vue3",
+    "vue-hooks",
+    "react-hooks",
+    "composition-api",
+    "vue3-hooks",
+    "useState",
+    "useEffect",
+    "useLayoutEffect"],
+  "author": "Cobyte",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/amebyte/vue-hooks-api/issues"
+  },
+  "homepage": "https://github.com/amebyte/vue-hooks-api#readme",
+  "devDependencies": {
+    "@babel/core": "^7.15.5",
+    "@babel/preset-env": "^7.15.6",
+    "@babel/preset-typescript": "^7.15.0",
+    "@types/jest": "^27.0.1",
+    "@rollup/plugin-typescript": "^8.2.5",
+    "babel-jest": "^27.1.1",
+    "jest": "^27.1.1",
+    "rollup": "^2.58.0",
+    "tslib": "^2.3.1",
+    "typescript": "^4.4.3",
+    "vue": "^3.2.23"
+  }
+}
