@@ -84,7 +84,88 @@ Hooks 的英文翻译是 “钩子”，Vue、React 的那些生命周期函数�
 
 ### React Hooks 的本质
 
+首先 React Hooks 只可以使用在 React 的函数组件上，在 React Hooks 出现之前它是不可以存储属于自己的数据状态的，因故也不可以进行数据逻辑的复用。直到 React Hooks 的出现，在 React 的函数组件上就可以进行存储属于它自己的数据状态了，进而可以达到数据逻辑的复用。这也是 React Hooks 的作用，可以进行数据逻辑的复用。
 
+那么为什么 React 可以做到在函数组件上进行存储数据状态的呢？首先 **React 函数组件的本质是一个函数**，React   函数的更新就是重新执行 React 函数组件得到新的虚拟 DOM 数据。那么要在 React 函数组件上存储属于这个函数组件自己的数据，本质就是在一个函数上存储属于这个函数的数据，在这个函数的后续执行的时候还可以获取到它自己内部的变量数据，并且不会和其他函数组件的内部的变量数据发生冲突，**这其中最好的实现方式就是实现一个闭包函数**。
+
+**React Hooks 的最简模型**
+
+```javascript
+// Hooks
+function useReducer(reducer, initalState) {
+    let hook = initalState
+    const dispatch = (action) => {
+        hook = reducer(hook, action)
+        // 关键，执行 setCount 函数的时候会重新执行 FunctionComponent 函数
+        FunctionComponent()
+    }
+    return [hook, dispatch]
+}
+// 函数组件
+function FunctionComponent() {
+   const [count, setCount] = useReducer(x => x + 1, 0)
+    
+   return {count, setCount}
+}
+
+const result = FunctionComponent()
+// 执行 setCount 会从新执行 FunctionComponent
+result.setCount()
+```
+
+通过上面 React Hooks 的最简模型可以知道执行组件函数 FunctionComponent 可以看成从 Hooks 返回了两个变量 count 和 setCount，count 很明显是拿来展示使用的，setCount 则是拿来给用户交互使用的，当用户执行 setCount 的时候 FunctionComponent 会重新执行。
+
+上述 React Hooks 的最简模型还存在一个问题，当用户执行 setCount 的时候 FunctionComponent 重新执行的时候，hook 会被一直初始化，值不能进行迭代。那么我们知道 React 当中一个函数组件就是一个 Fiber 节点，所以可以把 hook 存储在 Fiber 节点上。
+
+```javascript
+// Fiber 节点
+const Fiber = {
+    type: FunctionComponent, // Fiber 节点上的 type 属性是组件函数
+    memorizedState: null // Fiber 节点上的 memorizedState 属性是 Hooks
+}
+// Hooks
+function useReducer(reducer, initalState) {
+    // 初始化的时候，如果 Fiber 节点的 Hooks 不存在则进行设置
+    if(!Fiber.memorizedState) Fiber.memorizedState = initalState
+    const dispatch = (action) => {
+        Fiber.memorizedState = reducer(Fiber.memorizedState, action)
+        // 关键，执行 setCount 函数的时候会重新执行 FunctionComponent 函数
+        Fiber.type()
+    }
+    return [Fiber.memorizedState, dispatch]
+}
+// 函数组件
+function FunctionComponent() {
+    const [count, setCount] = useReducer(x => x + 1, 0)
+    console.log("渲染的count:", count) 
+    return {count, setCount}
+}
+
+const result = Fiber.type() // 打印 0
+// 执行 setCount 会从新执行 FunctionComponent
+result.setCount() // 打印 1
+result.setCount() // 打印 2
+result.setCount() // 打印 3
+```
+
+经过上述代码修改之后，一个最简单的 React Hooks 的实现模型就完成了，这也是 React Hooks 的本质。值得注意的是其中 reducer 的实现跟 Redux 的 reducer 的实现是很相似的，这是因为它们是同一个作者实现的缘故。
+
+### React Hooks 的链表
+
+在上面的代码中，我们只在函数组件里使用了一个 Hooks，但实际开发中，我们是会同时使用多个 Hooks 的。例如：
+
+```javascript
+// 函数组件
+function FunctionComponent() {
+    const [count1, setCount1] = useReducer(x => x + 1, 0)
+    const [count2, setCount2] = useReducer(x => x + 1, 0)
+    console.log("渲染的count1:", count1) 
+    console.log("渲染的count2:", count2)
+    return {count1, setCount1, count2, setCount2}
+}
+```
+
+那么在使用多个 Hooks 的时候，我们又怎么去存储这些 Hooks 呢？我们知道在 React Hooks 中是把所有的 Hooks 设置成了一个链表结构的变量，那么其中的原理又是怎么样的呢？
 
 ### Vue3 的函数组件
 

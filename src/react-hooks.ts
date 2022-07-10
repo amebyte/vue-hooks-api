@@ -20,7 +20,13 @@ function renderHooks(wip: any) {
 }
 
 function updateWorkInProgressHook() {
-  if (!currentlyRenderingFiber) renderHooks(getCurrentInstance());
+  const instance = getCurrentInstance() as any;
+  if (
+    !currentlyRenderingFiber ||
+    currentlyRenderingFiber.uid !== instance.uid
+  ) {
+    renderHooks(instance);
+  }
 
   const current = currentlyRenderingFiber.alternate;
   let hook;
@@ -55,7 +61,7 @@ function updateWorkInProgressHook() {
 }
 
 export function useState(initalState: any) {
-    return useReducer(null, initalState);
+  return useReducer(null, initalState);
 }
 
 export function useReducer(reducer: any, initalState: any) {
