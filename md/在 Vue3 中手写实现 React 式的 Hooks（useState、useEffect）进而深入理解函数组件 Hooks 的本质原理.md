@@ -165,7 +165,7 @@ function FunctionComponent() {
 }
 ```
 
-那么在使用多个 Hooks 的时候，我们又怎么去存储这些 Hooks 呢？我们知道在 React Hooks 中是把所有的 Hooks 设置成了一个链表结构的变量，那么其中的原理又是怎么样的呢？
+那么在使用多个 Hooks 的时候，我们又怎么去存储这些 Hooks 呢？我们知道在 React Hooks 中是把所有的 Hooks 设置成了一个链表结构的数据，那么其中的原理又是怎么样的呢？
 
 ### Vue3 的函数组件
 
