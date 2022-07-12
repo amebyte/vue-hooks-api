@@ -291,6 +291,63 @@ Fiber.memorizedState = {
 ### useEffect 、useLayoutEffect 的实现原理
 useEffect 、useLayoutEffect 的使用方式是一样的，都是接收两个参数，第一个参数是回调函数，第二个参数是一个数组，里面放一些依赖变量，在更新的时候会去判断这些依赖变量是否发生变化来决定是否需要执行回调函数。最大的区别就是执行的时机不同，useLayoutEffect 组件函数渲染完成后立即执行，而 useEffect 则是异步执行的，需要等到下一轮的宏任务执行的时候再去执行。
 
+```javascript
+// 定义两个二进制变量标识不同的 effect hook
+const HookLayout = 0b010;
+const HookPassive = 0b100;
+
+// useEffect hook
+function useEffect(create, deps) {
+  return updateEffectImp(HookPassive, create, deps);
+}
+// useLayoutEffect hook
+function useLayoutEffect(create, deps) {
+  return updateEffectImp(HookLayout, create, deps);
+}
+// effect 具体实现函数
+function updateEffectImp(hookFlags, create, deps) {
+    // 先获取 hook
+    const hook = updateWorkInProgressHook()
+    // 创建 effect 对象
+    const effect = {hookFlags, create, deps}
+    // 把 effect 对象赋值给 hook 的 memorizedState 属性，等到将来更新的时候需要获取使用
+    hook.memorizedState = effect
+	// 往 Fiber 上存储 effect 对象
+    if(hookFlags & HookPassive) {
+        Fiber.updateQueueOfEffect.push(effect)
+    } else if(hookFlags & HookLayout){
+        Fiber.updateQueueOfLayoutEffect.push(effect)
+    }
+}
+```
+
+这里最主要的是 updateEffectImp 函数的实现，updateEffectImp 函数主要把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上。那么到这里，我们就要了解一下 React 的运行流程才可以继续下去了。
+
+**简述 React 运行流程**
+
+首先一开始跟 Vue 一样把根组件生成一棵虚拟 DOM 树，然后再去把这棵虚拟 DOM 树进行协调成一棵 Fiber 树，其中函数组件也被协调成一个 Fiber 节点，等到执行到函数组件这个 Fiber 节点时候，则判断到这是一个函数组件的 Fiber 节点，那么就会去执行函数组件的相关逻辑。
+
+那么在执行函数组件相关逻辑之前的时候，就要对 Hooks 进行相关的初始化了。
+
+```javascript
+// currentlyRenderingFiber 表示当前的执行任务的 Fiber
+const currentlyRenderingFiber = null
+// 正在工作的 Hook，也就是尾 Hook
+const workInProgressHook = null
+// 初始化 Hooks 的函数
+export function renderHooks(wip) {
+    currentlyRenderingFiber = wip
+    currentlyRenderingFiber.memorizedState = null
+    // 初始化 Effect hooks 的属性值
+    currentlyRenderingFiber.updateQueueOfEffect = []
+    // 初始化 layoutEffect hooks 的属性值
+    currentlyRenderingFiber.updateQueueOfLayoutEffect = []
+    workInProgressHook = null
+}
+```
+
+这里的 currentlyRenderingFiber 有点像 Vue 当中的组件实例对象，相当于一个管家的角色。
+
 ### 小结：简述 React Hooks 的实现原理
 
 
