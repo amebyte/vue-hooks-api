@@ -254,6 +254,39 @@ function updateWorkInProgressHook() {
   return hook;
 }
 ```
+### 如何理解 React Hooks 的使用限制
+
+React 的同学都知道 React 官方是有对 Hooks 的使用是有规则限制的，其中一条就是只在最顶层使用 Hook，不要在循环，条件或嵌套函数中调用 Hook。为什么要有这条限制呢？其实主要是想确保 Hook 在每一次渲染中都按照同样的顺序被调用。
+
+例如下面的 Hook 调用：
+
+```javascript
+let flag = true
+// 函数组件
+function FunctionComponent() {
+    const [count1, setCount1] = useReducer(x => x + 1, 0)
+    if(flag) const [count2, setCount2] = useReducer(x => x + 1, 1)
+    const [count3, setCount3] = useReducer(x => x + 1, 1)
+    flag = false
+    return {...}
+}
+```
+
+上面代码在初始化的时候会产生三个 Hooks，依次保存在 Fiber 的 memorizedState 属性上，我们使用伪代码模拟一下：
+
+```javascript
+Fiber.memorizedState = {
+    memorizedState: count1,
+    next: {
+        memorizedState: count2,
+        next: {
+            memorizedState: count3,
+            next: null,
+        },
+    },
+}
+```
+在更新的时候，第二个位置的 hook 不执行了，原来属于是第三个位置的 hook 排到第二的位置上了，所以它获取到的是原来第二个位置的 hook, 而不是第三个位置的 hoos，如果后面有更多的 hook，顺序都会乱掉，所以 hook，要保证按顺序执行。
 
 
 ### Vue3 的函数组件
