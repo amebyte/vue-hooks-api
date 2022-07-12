@@ -354,7 +354,9 @@ function updateEffectImp(hookFlags, create, deps) {
 
 这里最主要的是 updateEffectImp 函数的实现，updateEffectImp 函数主要把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上。其实这里的实现和 React 源码的实现是有差别的，但我们主要是为了表达原理，就不跟源码一样了，不然太复杂。但即使再复杂，它的基本原理是一样的，就是把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上。
 
-那么把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上之后，在什么时候调用它们呢？这里又要说一下 React 的运行原理了，React 在使用 Fiber 架构之后，协调节点和渲染更新节点是异步的，而 Vue 则是同步的。所以在执行函数组件，并处理函数组件内的所有使用的 Hooks 的这一系列操作是在 React 的协调阶段。等到渲染更新阶段再进行处理在协调阶段设置的一系列动作，比如我们上面 useEffect、useLayoutEffect 设置在函数组件 Fiber 节点上的回调函数。
+那么把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上之后，在什么时候调用它们呢？这里又要说一下 React 的运行原理了，React 在使用 Fiber 架构之后，协调节点和渲染更新节点是异步的，而 Vue 则是同步的。所以在执行函数组件，并处理函数组件内的所有使用的 Hooks 的这一系列操作是在 React 的协调阶段。等到渲染更新阶段再进行处理在协调阶段设置的一系列动作，比如我们上面 useEffect、useLayoutEffect 设置在函数组件 Fiber 节点上的回调函数，便这渲染更新这一阶段进行一定规则的调用处理。
+
+
 
 ### 小结：简述 React Hooks 的实现原理
 
