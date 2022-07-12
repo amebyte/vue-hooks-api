@@ -52,7 +52,7 @@ React 的同学可能以为这是一个 React 的函数组件，其实不是，�
 
 **关于 vue-hooks-api npm 包**
 
-`vue-hooks-api` npm 包是本文作者发布的一个 React 风格的 Vue3 Hooks，目前只可使用于 Vue3 函数式组件，跟React 的函数式组件的 Hooks 使用方式一致。
+`vue-hooks-api` npm 包是本文作者发布的一个 React 风格的 Vue3 Hooks 包，目前只可使用于 Vue3 函数式组件，跟 React 的函数式组件的 Hooks 使用方式一致。
 
 可以通过 yarn 方式安装体验。
 
@@ -148,7 +148,7 @@ result.setCount() // 打印 2
 result.setCount() // 打印 3
 ```
 
-经过上述代码修改之后，一个最简单的 React Hooks 的实现模型就完成了，这也是 React Hooks 的本质。值得注意的是其中 reducer 的实现跟 Redux 的 reducer 的实现是很相似的，这是因为它们是同一个作者实现的缘故。
+经过上述代码修改之后，一个最简单的 React Hooks 的模型就实现完成了，这也是 React Hooks 的本质。值得注意的是其中 reducer 的实现跟 Redux 的 reducer 的实现是很相似的，这是因为它们是同一个作者开发的功能的缘故。
 
 ### React Hooks 的链表
 
@@ -188,7 +188,7 @@ const hook = {
 }
 ```
 
-我们可以设置一个中间变量 workInProgressHook 来存储当前的尾 hook 是哪一个，当有新的 hook 进来的时候，可以通过当前的尾 hook 的 next 指针指向它，那么这个新的 hook 成了新的尾 hook，所以 workInProgressHook 中间变量需要更新成新的 hook。当再有新的 hook 进来的时候，则可以通过 workInProgressHook 是否有值进行判断是不是头节点 hook，如果 workInProgressHook 有值则把新的 hook 存储在 workInProgressHook 的 next 指针上。
+我们可以设置一个中间变量 workInProgressHook 来存储当前的尾 hook 是哪一个，当有新的 hook 进来的时候，可以通过当前的尾 hook 的 next 指针指向它，那么这个新的 hook 成了新的尾 hook，所以 workInProgressHook 中间变量需要更新成新的 hook。当再有新的 hook 进来的时候，则可以通过 workInProgressHook 是否有值进行判断是不是头节点的 hook，如果 workInProgressHook 有值则把新的 hook 存储在 workInProgressHook 的 next 指针上。
 
 那么代码的实现：
 
@@ -256,7 +256,7 @@ function updateWorkInProgressHook() {
 ```
 ### 如何理解 React Hooks 的使用限制
 
-React 的同学都知道 React 官方是有对 Hooks 的使用是有规则限制的，其中一条就是只在最顶层使用 Hook，不要在循环，条件或嵌套函数中调用 Hook。为什么要有这条限制呢？其实主要是想确保 Hook 在每一次渲染中都按照同样的顺序被调用。如果不按顺序执行会怎么样呢？下面我们使用伪代码来模拟一下。
+React 的同学都知道 React 官方是有对 Hooks 的使用是有规则限制的，其中一条就是**只在最顶层使用 Hook，不要在循环，条件或嵌套函数中调用 Hook**。为什么要有这条限制呢？其实主要是想确保 Hook 在每一次渲染中都按照同样的顺序被调用。如果不按顺序执行会怎么样呢？下面我们使用伪代码来模拟一下。
 
 例如下面的 Hook 调用：
 
@@ -290,6 +290,8 @@ Fiber.memorizedState = {
 
 ### useEffect 、useLayoutEffect 的实现原理
 useEffect 、useLayoutEffect 的使用方式是一样的，都是接收两个参数，第一个参数是回调函数，第二个参数是一个数组，里面放一些依赖变量，在更新的时候会去判断这些依赖变量是否发生变化来决定是否需要执行回调函数。最大的区别就是执行的时机不同，useLayoutEffect 组件函数渲染完成后立即执行，而 useEffect 则是异步执行的，需要等到下一轮的宏任务执行的时候再去执行。
+
+### 小结：简述 React Hooks 的实现原理
 
 
 
