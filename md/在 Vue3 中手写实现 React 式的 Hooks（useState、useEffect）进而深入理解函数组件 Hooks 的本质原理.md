@@ -60,7 +60,7 @@ React 的同学可能以为这是一个 React 的函数组件，其实不是，�
 yarn add vue-hooks-api
 ```
 
-注意，此 npm 包目前只是一个实验性产品，旨在探讨 React Hooks 的实现原理，慎用于生产环境。
+注意，此 npm 包目前只是一个实验性产品，旨在探讨如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks，请慎用于生产环境。
 
 下文也将围绕这个 `vue-hooks-api` npm 包如何实现的进行讲解。
 
