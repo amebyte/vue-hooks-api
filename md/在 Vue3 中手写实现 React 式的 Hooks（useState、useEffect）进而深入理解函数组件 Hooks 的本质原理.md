@@ -179,6 +179,75 @@ function FunctionComponent() {
 
 那么在 React 使用代码怎么来实现这个链表数据结构呢？
 
+我们通过上文知道 Hook 存储在 Fiber 节点的 memorizedState 属性上的，Hook 的数据结构也可以通过上文得知可以这样设置：
+
+```javascript
+const hook = {
+      memorizedState: null, // 存储 hook 
+      next: null,  // next 指针，指向下一个 hook
+}
+```
+
+我们可以设置一个中间变量 workInProgressHook 来存储当前的尾 hook 是哪一个，当有新的 hook 进来的时候，可以通过当前的尾 hook 的 next 指针指向它，那么这个新的 hook 成了新的尾 hook，所以 workInProgressHook 中间变量需要更新成新的 hook。当再有新的 hook 进来的时候，则可以通过 workInProgressHook 是否有值进行判断是不是头节点 hook，如果 workInProgressHook 有值则把新的 hook 存储在 workInProgressHook 的 next 指针上。
+
+那么代码的实现：
+
+```javascript
+// hook 的中间变量，可以理解为正在工作的 hook 或尾 hook
+let workInProgressHook = null
+// 获取或创建 hook 的函数
+function updateWorkInProgressHook() {
+    hook = {
+      memorizedState: null,
+      next: null,
+    };
+    
+    if (workInProgressHook) {
+      // 如果有尾 hook 则说明不是头节点 hook
+      workInProgressHook = workInProgressHook.next = hook;
+    } else {
+      // 如果没有尾 hook 则说明是头节点 hook
+      workInProgressHook = Fiber.memorizedState = hook;
+    }
+    
+    return hook
+}
+```
+
+
+
+```javascript
+function updateWorkInProgressHook() {
+
+  const current = Fiber.alternate;
+  let hook;
+  if (current) {
+    Fiber.memorizedState = current.memorizedState;
+    if (workInProgressHook) {
+      // 不是头节点
+      hook = workInProgressHook = workInProgressHook.next;
+    } else {
+      // 头节点
+      hook = workInProgressHook = current.memorizedState;
+    }
+  } else {
+    hook = {
+      memorizedState: null,
+      next: null,
+    };
+
+    if (workInProgressHook) {
+      // 不是头节点
+      workInProgressHook = workInProgressHook.next = hook;
+    } else {
+      // 头节点
+      workInProgressHook = Fiber.memorizedState = hook;
+    }
+  }
+
+  return hook;
+}
+```
 
 
 ### Vue3 的函数组件
