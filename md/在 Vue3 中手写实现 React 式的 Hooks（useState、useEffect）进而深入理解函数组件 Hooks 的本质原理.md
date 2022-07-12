@@ -213,34 +213,40 @@ function updateWorkInProgressHook() {
     return hook
 }
 ```
-
+那么更新的时候，也就是再次进行执行函数组件 FunctionComponent 的时候怎么去获取对应的 hook 呢？
+在 React 当中当渲染组件之后会把当前的 Fiber 节点信息设置到 Fiber 的 alternate 属性上，所以我们可以通过判断当前 Fiber 节点是否存在 alternate 来判断当前是属于更新阶段还是初始化阶段，如果是初始化阶段，那么我们就去 Fiber 的 alternate 属性上获取相应的 hook。
 
 
 ```javascript
+// hook 的中间变量，可以理解为正在工作的 hook 或尾 hook
+let workInProgressHook = null
+// 获取或创建 hook 的函数
 function updateWorkInProgressHook() {
-
+  // 获取旧 Fiber
   const current = Fiber.alternate;
   let hook;
+  // 如果存在旧 Fiber 则是更新阶段
   if (current) {
     Fiber.memorizedState = current.memorizedState;
     if (workInProgressHook) {
-      // 不是头节点
+      // 如果有尾 hook 则说明不是头节点 hook
       hook = workInProgressHook = workInProgressHook.next;
     } else {
-      // 头节点
+      // 如果没有尾 hook 则说明是头节点 hook
       hook = workInProgressHook = current.memorizedState;
     }
   } else {
+    // 没有旧 Fiber 则是初始化阶段
     hook = {
       memorizedState: null,
       next: null,
     };
 
     if (workInProgressHook) {
-      // 不是头节点
+      // 如果有尾 hook 则说明不是头节点 hook
       workInProgressHook = workInProgressHook.next = hook;
     } else {
-      // 头节点
+      // 如果没有尾 hook 则说明是头节点 hook
       workInProgressHook = Fiber.memorizedState = hook;
     }
   }
