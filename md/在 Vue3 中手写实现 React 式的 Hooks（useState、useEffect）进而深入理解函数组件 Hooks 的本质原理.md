@@ -411,7 +411,13 @@ const FunctionalComponent = (props, context) => {
 }
 ```
 
-无论是普通的对象形式的组件还是函数形式的组件都是存储在虚拟 DOM 的 type 属性上的，然后在创建虚拟 DOM 之后，会对虚拟 DOM 的 type 属性进行判断，如果是对象则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.STATEFUL_COMPONENT`  的标记，表示这是一个状态组件，如果虚拟 DOM 的 type 属性是函数的话则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.FUNCTIONAL_COMPONENT` 的标记，表示这是一个函数组件。在将来执行的时候如果是状态组件就执行状态组件的 render 函数获取组件的虚拟 DOM，如果是组件函数则直接它自己获取组件的虚拟 DOM。
+无论是普通的对象形式的组件还是函数形式的组件都是存储在虚拟 DOM 的 type 属性上的，然后在创建虚拟 DOM 之后，会对虚拟 DOM 的 type 属性进行判断，如果是对象则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.STATEFUL_COMPONENT`  的标记，表示这是一个状态组件，如果虚拟 DOM 的 type 属性是函数的话则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.FUNCTIONAL_COMPONENT` 的标记，表示这是一个函数组件。在将来执行的时候如果是状态组件就执行状态组件的 render 函数获取组件的虚拟 DOM，如果是组件函数则直接执行它自己获取组件的虚拟 DOM。
 
 ### 如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks
+
+
+
+
+
+### 总结
 
