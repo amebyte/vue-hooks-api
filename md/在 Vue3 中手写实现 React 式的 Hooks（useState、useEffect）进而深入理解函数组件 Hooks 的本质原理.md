@@ -354,7 +354,33 @@ function updateEffectImp(hookFlags, create, deps) {
 
 这里最主要的是 updateEffectImp 函数的实现，updateEffectImp 函数主要把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上。其实这里的实现和 React 源码的实现是有差别的，但我们主要是为了表达原理，就不跟源码一样了，不然太复杂。但即使再复杂，它的基本原理是一样的，就是把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上。
 
-那么把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上之后，在什么时候调用它们呢？这里又要说一下 React 的运行原理了，React 在使用 Fiber 架构之后，协调节点和渲染更新节点是异步的，而 Vue 则是同步的。所以在执行函数组件，并处理函数组件内的所有使用的 Hooks 的这一系列操作是在 React 的协调阶段。等到渲染更新阶段再进行处理在协调阶段设置的一系列动作，比如我们上面 useEffect、useLayoutEffect 设置在函数组件 Fiber 节点上的回调函数，便这渲染更新这一阶段进行一定规则的调用处理。
+那么把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上之后，在什么时候调用它们呢？这里又要说一下 React 的运行原理了，React 在使用 Fiber 架构之后，协调节点和渲染更新节点是异步的，而 Vue 则是同步的。所以在执行函数组件，并处理函数组件内的所有使用的 Hooks 的这一系列操作是在 React 的协调阶段。等到渲染更新阶段再进行处理在协调阶段设置的一系列动作，比如我们上面 useEffect、useLayoutEffect 设置在函数组件 Fiber 节点上的回调函数，便这渲染更新这一阶段进行一定规则的调用处理。具体的规则就是我们前面说到的，useLayoutEffect 组件函数渲染完成后立即执行，而 useEffect 则是异步执行的，需要等到下一轮的宏任务执行的时候再去执行。
+
+伪代码模拟实现一下：
+
+```javascript
+// 在更新之后调用设置在 Fiber 节点上的 Hooks
+function invokeHooks(wip) {
+    const {updateQueueOfEffect, updateQueueOfLayoutEffect} = wip
+    for(let i = 0; i < updateQueueOfLayoutEffect.length; i++) {
+        const effect = updateQueueOfLayoutEffect[i]
+        // useEffect 会立即执行
+        effect.create();
+    }
+
+    for(let i = 0; i < updateQueueOfEffect.length; i++) {
+        const effect = updateQueueOfEffect[i]
+        // useEffect 是通过 React 的调度器进行处理的，而这个调度器最终是通过一个宏任务进行调用的
+        scheduleCallback(() => {
+            effect.create();
+        })
+    }
+}
+```
+
+关于 React 调度器相关的内容这里就不进行展开讨论了。
+
+### 具体理解 useEffect、useLayoutEffect 的区别
 
 
 
