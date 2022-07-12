@@ -256,7 +256,7 @@ function updateWorkInProgressHook() {
 ```
 ### 如何理解 React Hooks 的使用限制
 
-React 的同学都知道 React 官方是有对 Hooks 的使用是有规则限制的，其中一条就是只在最顶层使用 Hook，不要在循环，条件或嵌套函数中调用 Hook。为什么要有这条限制呢？其实主要是想确保 Hook 在每一次渲染中都按照同样的顺序被调用。
+React 的同学都知道 React 官方是有对 Hooks 的使用是有规则限制的，其中一条就是只在最顶层使用 Hook，不要在循环，条件或嵌套函数中调用 Hook。为什么要有这条限制呢？其实主要是想确保 Hook 在每一次渲染中都按照同样的顺序被调用。如果不按顺序执行会怎么样呢？下面我们使用伪代码来模拟一下。
 
 例如下面的 Hook 调用：
 
@@ -266,7 +266,7 @@ let flag = true
 function FunctionComponent() {
     const [count1, setCount1] = useReducer(x => x + 1, 0)
     if(flag) const [count2, setCount2] = useReducer(x => x + 1, 1)
-    const [count3, setCount3] = useReducer(x => x + 1, 1)
+    const [count3, setCount3] = useReducer(x => x + 1, 2)
     flag = false
     return {...}
 }
@@ -286,12 +286,16 @@ Fiber.memorizedState = {
     },
 }
 ```
-在更新的时候，第二个位置的 hook 不执行了，原来属于是第三个位置的 hook 排到第二的位置上了，所以它获取到的是原来第二个位置的 hook, 而不是第三个位置的 hoos，如果后面有更多的 hook，顺序都会乱掉，所以 hook，要保证按顺序执行。
+在更新的时候，第二个位置的 hook 不执行了，原来属于是第三个位置的 hook 排到第二的位置上了，所以它获取到的是原来第二个位置的 hook, 而不是第三个位置的 hook，如果后面有更多的 hook，顺序都会乱掉，所以 hook，要保证按顺序执行。
+
+### useEffect 、useLayoutEffect 的实现原理
+useEffect 、useLayoutEffect 的使用方式是一样的，都是接收两个参数，第一个参数是回调函数，第二个参数是一个数组，里面放一些依赖变量，在更新的时候会去判断这些依赖变量是否发生变化来决定是否需要执行回调函数。最大的区别就是执行的时机不同，useLayoutEffect 组件函数渲染完成后立即执行，而 useEffect 则是异步执行的，需要等到下一轮的宏任务执行的时候再去执行。
+
 
 
 ### Vue3 的函数组件
 
 
 
-### Vue3 的函数组件 Hooks
+### 如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks
 
