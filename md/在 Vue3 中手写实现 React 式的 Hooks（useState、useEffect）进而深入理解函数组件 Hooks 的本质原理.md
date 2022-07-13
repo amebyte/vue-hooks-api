@@ -150,6 +150,38 @@ result.setCount() // 打印 3
 
 经过上述代码修改之后，一个最简单的 React Hooks 的模型就实现完成了，这也是 React Hooks 的本质。值得注意的是其中 reducer 的实现跟 Redux 的 reducer 的实现是很相似的，这是因为它们是同一个作者开发的功能的缘故。
 
+### 闭包函数在 React Hooks 中的实践
+
+上面的代码实现还存在一个问题，就是 useReducer 函数里的 dispatch 方法里面的 Fiber 变量目前是全局的，如果有其他函数组件也使用了 useReducer Hook 的时候，dispatch 方法里的 Fiber 变量就变成其他函数的 Fiber 节点了，之前的函数组件里的调用 dispatch 方法的时候，将不再是它自己了。所以我们需要在初始化的时候把 dispatch 方法里面的每一个 Fiber 缓存起来，将来调用的时候，还是原来的 Fiber 节点。
+
+上述的功能要求，其实就是闭包的参数复用的功能。
+
+```javascript
+function Fn(p) {
+    return function () {
+        console.log(p)
+    }
+}
+
+const f = Fn('coboy')
+f() // 打印 coboy
+f() // 打印 coboy
+```
+
+React 中的实现则非常巧妙了
+
+```javascript
+function Fn(p) {
+    console.log(p)
+}
+
+const f = Fn.bind(null, 'coboy')
+f() // 打印 coboy
+f() // 打印 coboy
+```
+
+这其中是什么原理呢？可以看我这篇文章《[JavaScript 中的 this 实战例题总结分析](https://juejin.cn/post/7105756630519644168)》，我在里面有详细讲解 bind 方法的实现原理。
+
 ### React Hooks 的链表
 
 在上面的代码中，我们只在函数组件里使用了一个 Hooks，但实际开发中，我们是会同时使用多个 Hooks 的。例如：
