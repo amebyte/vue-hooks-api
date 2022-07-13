@@ -323,13 +323,133 @@ Fiber.memorizedState = {
 ### useEffect 、useLayoutEffect 的实现原理
 useEffect 、useLayoutEffect 的使用方式是一样的，都是接收两个参数，第一个参数是回调函数，第二个参数是一个数组，里面放一些依赖变量，在更新的时候会去判断这些依赖变量是否发生变化来决定是否需要执行回调函数。最大的区别就是执行的时机不同，useLayoutEffect 组件函数渲染完成后立即执行，而 useEffect 则是异步执行的，需要等到下一轮的宏任务执行的时候再去执行。
 
+那么到这里，我们就要了解一下 React 的运行流程才可以继续进行下去了。
+
+**简述 React 运行流程**
+
+首先一开始跟 Vue 一样把根组件生成一棵虚拟 DOM 树，然后再去把这棵虚拟 DOM 树进行协调成一棵 Fiber 树，其中函数组件也被协调成一个 Fiber 节点，等到执行到函数组件这个 Fiber 节点时候，则判断到这是一个函数组件的 Fiber 节点，那么就会去执行函数组件的相关逻辑。
+
+那么在执行函数组件相关逻辑之前的时候，就要对 Hooks 进行相关的初始化了。
+
+```javascript
+// currentlyRenderingFiber 表示当前的执行任务的 Fiber
+const currentlyRenderingFiber = null
+// 正在工作的 Hook，也就是尾 Hook
+const workInProgressHook = null
+// 初始化 Hooks 的函数
+export function renderHooks(wip) {
+    currentlyRenderingFiber = wip
+    currentlyRenderingFiber.memorizedState = null
+    // 初始化 Effect hooks 的属性值
+    currentlyRenderingFiber.updateQueueOfEffect = []
+    // 初始化 layoutEffect hooks 的属性值
+    currentlyRenderingFiber.updateQueueOfLayoutEffect = []
+    workInProgressHook = null
+}
+```
+
+这里的 currentlyRenderingFiber 有点像 Vue 当中的组件实例对象，相当于一个管家的角色。在进行 Hook 的初始化之后，则执行函数组件，因为函数组件本质是一个函数，所以它是可以执行的。组件函数就存储在 Fiber 的 type 属性上，实质就是执行 `Fiber.type()` 。如果组件函数里面使用了 useEffect 和 useLayoutEffect Hook 的话，就再去执行 useEffect 和 useLayoutEffect 的相关函数。
+
+那么下面我们就来看看 useEffect 和 useLayoutEffect 的相关函数的实现。
+
+```javascript
+// 定义两个二进制变量标识不同的 effect hook
+const HookLayout = 0b010;
+const HookPassive = 0b100;
+
+// useEffect hook
+function useEffect(create, deps) {
+  return updateEffectImp(HookPassive, create, deps);
+}
+// useLayoutEffect hook
+function useLayoutEffect(create, deps) {
+  return updateEffectImp(HookLayout, create, deps);
+}
+// effect 具体实现函数
+function updateEffectImp(hookFlags, create, deps) {
+    // 先获取 hook
+    const hook = updateWorkInProgressHook()
+    // 创建 effect 对象
+    const effect = {hookFlags, create, deps}
+    // 把 effect 对象赋值给 hook 的 memorizedState 属性，等到将来更新的时候需要获取使用
+    hook.memorizedState = effect
+	// 往 Fiber 上存储 effect 对象
+    if(hookFlags & HookPassive) {
+        // 在初始化的时候已经把 updateQueueOfEffect 设置成了一个空数组了，所以在这里可直接使用数组方法 push 进行添加元素
+        Fiber.updateQueueOfEffect.push(effect)
+    } else if(hookFlags & HookLayout){
+        // 在初始化的时候已经把 updateQueueOfLayoutEffect 设置成了一个空数组了，所以在这里可直接使用数组方法 push 进行添加元素
+        Fiber.updateQueueOfLayoutEffect.push(effect)
+    }
+}
+```
+
+这里最主要的是 updateEffectImp 函数的实现，updateEffectImp 函数主要把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上。其实这里的实现和 React 源码的实现是有差别的，但我们主要是为了表达原理，就不跟源码一样了，不然太复杂。但即使再复杂，它的基本原理是一样的，就是把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上。
+
+那么把 useEffect、useLayoutEffect 的参数存储到 Fiber 对象上之后，在什么时候调用它们呢？这里又要说一下 React 的运行原理了，React 在使用 Fiber 架构之后，协调节点和渲染更新节点是异步的，而 Vue 则是同步的。所以在执行函数组件，并处理函数组件内的所有使用的 Hooks 的这一系列操作是在 React 的协调阶段。等到渲染更新阶段再进行处理在协调阶段设置的一系列动作，比如我们上面 useEffect、useLayoutEffect 设置在函数组件 Fiber 节点上的回调函数，便这渲染更新这一阶段进行一定规则的调用处理。具体的规则就是我们前面说到的，useLayoutEffect 组件函数渲染完成后立即执行，而 useEffect 则是异步执行的，需要等到下一轮的宏任务执行的时候再去执行。
+
+伪代码模拟实现一下：
+
+```javascript
+// 在更新之后调用设置在 Fiber 节点上的 Hooks
+function invokeHooks(wip) {
+    const {updateQueueOfEffect, updateQueueOfLayoutEffect} = wip
+    for(let i = 0; i < updateQueueOfLayoutEffect.length; i++) {
+        const effect = updateQueueOfLayoutEffect[i]
+        // useEffect 会立即执行
+        effect.create();
+    }
+
+    for(let i = 0; i < updateQueueOfEffect.length; i++) {
+        const effect = updateQueueOfEffect[i]
+        // useEffect 是通过 React 的调度器进行处理的，而这个调度器最终是通过一个宏任务进行调用的
+        scheduleCallback(() => {
+            effect.create();
+        })
+    }
+}
+```
+
+关于 React 调度器相关的内容这里就不进行展开讨论了。
+
 ### 小结：简述 React Hooks 的实现原理
 
 
 
+接下来我们进行如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks 部分的内容。在开始之前，我们先了解一下 Vue3 函数组件的一些相关知识。
+
 ### Vue3 的函数组件
 
+函数式组件是自身没有任何状态的组件的另一种形式。此话怎么理解呢？
 
+我们普通的组件形式是这样的：
+
+```javascript
+const App = {
+    setup() {
+        // ...
+    },
+    render() {
+        // ...
+    }
+}
+```
+
+而函数组件就是一个函数：
+
+```javascript
+const FunctionalComponent = (props, context) => {
+	// ...
+}
+```
+
+无论是普通的对象形式的组件还是函数形式的组件都是存储在虚拟 DOM 的 type 属性上的，然后在创建虚拟 DOM 之后，会对虚拟 DOM 的 type 属性进行判断，如果是对象则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.STATEFUL_COMPONENT`  的标记，表示这是一个状态组件，如果虚拟 DOM 的 type 属性是函数的话则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.FUNCTIONAL_COMPONENT` 的标记，表示这是一个函数组件。在将来执行的时候如果是状态组件就执行状态组件的 render 函数获取组件的虚拟 DOM，如果是组件函数则直接执行它自己获取组件的虚拟 DOM。
 
 ### 如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks
+
+
+
+
+
+### 总结
 
