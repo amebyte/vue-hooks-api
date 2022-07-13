@@ -439,6 +439,7 @@ for(let i = 0; i < Fiber.effect.length; i++) {
         create()
     })
 }
+
 // 最后的打印顺序是 useLayoutEffect effect 
 ```
 
