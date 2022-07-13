@@ -220,21 +220,33 @@ result.setCount() // 打印 2
 result.setCount() // 打印 3
 ```
 
-我们可以看到 dispatchReducerAction 方法有一个 action 参数是在进行 bind 方法绑定的时候没有进行设置的，那么这个 action 参数是在什么时候设置的呢？我们上面的注释已经进行解析了，是在 dispatch 函数执行的时候设置的。也就是上述代码中的 result.setCount() 方法执行的时候，还可以传递参数，例如这样：result.setCount('cobyte')，这个其实就是 Hook 函数 useState() 方法做的事情。
+我们可以看到 dispatchReducerAction 方法有一个 action 参数是在进行 bind 方法绑定的时候没有进行设置的，那么这个 action 参数是在什么时候设置的呢？我们上面的注释已经进行解析了，是在 dispatch 函数执行的时候设置的。也就是上述代码中的 `result.setCount()` 方法执行的时候，还可以传递参数，例如这样：`result.setCount('cobyte')`，这个其实就是 Hook 函数 `useState()` 方法做的事情。
 
 ### useState 的实现
 
 useState 的实现其实很简单，就是在 useReducer 的基础上实现的。
 
 ```javascript
-export function useState(initalState) {
+function useState(initalState) {
   return useReducer(null, initalState);
 }
+
+function FunctionComponent() {
+    const [count, setCount] = useState(0)
+    console.log("渲染的count:", count) 
+    return {count, setCount}
+}
+
+const result = Fiber.type() // 打印 0
+// 执行 setCount 会从新执行 FunctionComponent
+result.setCount(2) // 打印 2
+result.setCount(3) // 打印 3
+result.setCount('cobyte') // 打印 cobyte
 ```
 
 useState 就是一个没有 reducer 参数的 useReducer。
 
-### 承上启下的小结
+### 承上启下的小节
 
 到目前为止，我们已经基本搞清楚 React Hooks 的实现最基本的原理了，但经常出现在各大面经中的 React Hooks 链接，我们还没涉及到。在上面的代码中，我们只在函数组件里使用了一个 Hooks，但实际开发中，我们是会同时使用多个 Hooks 的，使用到多个 Hooks 的时候，怎么存储这些 Hooks 就是一个值得思考的问题了，而 React 中就使用了 链表来存储这些 Hooks，那么下面让我们进入 React Hooks 的链表环节吧。
 
@@ -255,11 +267,11 @@ function FunctionComponent() {
 
 那么在使用多个 Hooks 的时候，我们又怎么去存储这些 Hooks 呢？我们知道在 React Hooks 中是把所有的 Hooks 设置成了一个链表结构的数据，那么其中的原理又是怎么样的呢？
 
-链表的基本思维是，利用结构体的设置，额外开辟出一份内存空间去作指针，它总是指向下一个节点，一个个节点通过 Next 指针相互串联，就形成了链表。
+链表的基本思维是，利用结构体的设置，额外开辟出一份内存空间去作指针，该指针总是指向下一个节点，一个个节点通过 Next 指针相互串联，就形成了链表。
 
  ![](./images/02.png)
 
-其中 Data 为自定义的数据类型，Next 为指向下一个链表结点的指针，通过访问 Next，就可以访问链表的下一个节点了。 
+其中 Data 为自定义的数据，Next 为指向下一个链表节点的指针，通过访问 Next，就可以访问链表的下一个节点了。 
 
 链表的结构有很多种，React 中的链接结构属于：**不带头单向非循环结构** 。我们可以把这种链表理解成为一个火车，每个链表，其实就是一节车厢，数据存储在车厢中中，而每个火车节都有一个指针，连接着下一个火车节 。
 
@@ -376,8 +388,59 @@ Fiber.memorizedState = {
 ```
 在更新的时候，第二个位置的 hook 不执行了，原来属于是第三个位置的 hook 排到第二的位置上了，所以它获取到的是原来第二个位置的 hook, 而不是第三个位置的 hook，如果后面有更多的 hook，顺序都会乱掉，所以 hook 要保证按顺序执行。
 
+### 为什么 React Hooks 要使用链表结构来实现
+
+其实 React Hooks 并不一定要使用链表结构来实现，也可以使用其他数据结构来实现，链表只是其中一种。React 团队似乎很偏爱底层的实现，比如链表、循环链表，连数组都用的都不多。对底层来说，链表的性能比较高，比如，数组相当于你需要的是连续空间，而链表不需要，那么对于系统来说，肯定是非连续空间更容易获得，而且节约空间。当然对于现在的电脑来说，我们都不是特别在乎空间，所以经常使用空间换时间。
+
+React 官方成员 dan 则曾经说过，主要是因为自定义 Hooks，容易命名冲突。具体中文翻译的文章链接地址在[这里](https://overreacted.io/zh-hans/why-do-hooks-rely-on-call-order/)
+
 ### useEffect 、useLayoutEffect 的实现原理
 useEffect 、useLayoutEffect 的使用方式是一样的，都是接收两个参数，第一个参数是回调函数，第二个参数是一个数组，里面放一些依赖变量，在更新的时候会去判断这些依赖变量是否发生变化来决定是否需要执行回调函数。最大的区别就是执行的时机不同，useLayoutEffect 组件函数渲染完成后立即执行，而 useEffect 则是异步执行的，需要等到下一轮的宏任务执行的时候再去执行。
+
+**useEffect 、useLayoutEffect 的最简实现模型**
+
+```javascript
+// Fiber 节点
+const Fiber = {
+    type: FunctionComponent, // Fiber 节点上的 type 属性是组件函数
+    effect: [],
+    layoutEffect: []
+}
+// 函数组件
+function FunctionComponent() {
+    useEffect(() => {
+        console.log("effect")
+    })
+    useLayoutEffect(() => {
+        console.log("useLayoutEffect")
+    })
+}
+// useEffect Hook
+function useEffect(create) {
+    Fiber.effect.push(create)
+}
+// useLayoutEffect Hook
+function useLayoutEffect(create) {
+    Fiber.layoutEffect.push(create)
+}
+// 执行函数组件的渲染
+Fiber.type()
+
+// 渲染完成后的处理
+for(let i = 0; i < Fiber.layoutEffect.length; i++) {
+    const create = Fiber.layoutEffect[i]
+    // useLayoutEffect 的回调函数立即执行
+    create()
+}
+for(let i = 0; i < Fiber.effect.length; i++) {
+    const create = Fiber.effect[i]
+    // useEffect 的回调函数进行异步调用执行
+    setTimeout(() => {
+        create()
+    })
+}
+// 最后的打印顺序是 useLayoutEffect effect 
+```
 
 那么到这里，我们就要了解一下 React 的运行流程才可以继续进行下去了。
 
@@ -466,9 +529,15 @@ function invokeHooks(wip) {
 }
 ```
 
-关于 React 调度器相关的内容这里就不进行展开讨论了。
+关于 React 调度器相关的内容这里就不进行展开讨论了，以后有机会再进行讨论。
+
+
 
 ### 小结：简述 React Hooks 的实现原理
+
+React Hooks 的实现原理就是把相应的函数组件里面使用的 Hooks 产生的状态逻辑数据**通过链表形式**挂载到对应的函数组件的 Fiber 节点上。其中 **useState 是在 useReducer 的基础上实现的**，useReducer 里面返回的 dispatch 函数是**通过闭包的形式**把相应的 Fiber 节点进行了缓存，在将来用户进行调用相应的 dispatch 函数时，依然可以触发对应的函数组件的 Fiber 节点进行更新。
+
+useEffect、useLayoutEffect 的实现方式是基本一致的，它们的主要区别是它们的回调函数的执行时机的不同。useLayoutEffect 是在函数组件渲染完成后立即调用的，而 useEffect 的回调函数则是进行一个异步的宏任务的调度，也就是在下一轮的任务执行的时候才进行调用。
 
 
 
@@ -500,6 +569,10 @@ const FunctionalComponent = (props, context) => {
 ```
 
 无论是普通的对象形式的组件还是函数形式的组件都是存储在虚拟 DOM 的 type 属性上的，然后在创建虚拟 DOM 之后，会对虚拟 DOM 的 type 属性进行判断，如果是对象则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.STATEFUL_COMPONENT`  的标记，表示这是一个状态组件，如果虚拟 DOM 的 type 属性是函数的话则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.FUNCTIONAL_COMPONENT` 的标记，表示这是一个函数组件。在将来执行的时候如果是状态组件就执行状态组件的 render 函数获取组件的虚拟 DOM，如果是组件函数则直接执行它自己获取组件的虚拟 DOM。
+
+### React 的异步任务为什么选择使用 MessageChannel 实现
+
+
 
 ### 如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks
 
