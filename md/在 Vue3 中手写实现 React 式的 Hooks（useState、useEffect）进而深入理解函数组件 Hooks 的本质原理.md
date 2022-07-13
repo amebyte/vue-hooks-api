@@ -6,7 +6,7 @@
 
 关于 Vue3 的 React 式 Hooks 的实现原理和 React Hooks 的实现原理在社区里已经有很多讨论的文章了，希望本文可以给你不一样的角度去理解 React Hooks 的本质原理，也只有理解了 React Hooks 实现的本质原理，才可以在 Vue3 的函数式组件上实现跟 React Hooks 一样的 Hooks 函数，例如： useState、useReducer、useEffect 、useLayoutEffect 等。
 
-关于 Vue3 的 React 式 Hooks，Vue.js 核心团队成员 Anthony Fu 也出了一个 Vue Hooks 工具库 VueUse，但本文不是去探讨 VueUse 的实现原理，而是通过实现一个 Vue3 函数式组件的 Hooks 去了解 React Hooks 的本质原理。本文更多的想探讨 React Hooks 的原理，同时在实现 Vue3  函数式组件的 Hooks 的过程也进一步理解 Vue3 的运行原理和调度原理等。
+关于 Vue3 的 React 式 Hooks，Vue.js 核心团队成员 Anthony Fu 也出了一个 Vue Hooks 工具库 VueUse，但本文不是去探讨 VueUse 的实现原理，而是通过实现一个 Vue3 函数式组件的 Hooks 去了解 React Hooks 的本质原理。本文更多的想探讨 React Hooks 的本质原理，同时在实现 Vue3  函数式组件 Hooks 的过程也进一步理解 Vue3 的运行原理和调度原理等。
 
 Vue3 的函数式组件或许很多人了解得不多，因为 Vue 官方也不推荐使用，所以通过本文你不但可以了解 React Hooks 的原理，也希望给 Vue 阵营的同学也可以提供一下关于 Vue3 函数式组件的知识。
 
@@ -48,7 +48,7 @@ const FunctionalComponent = (props, context) => {
 export default FunctionalComponent;
 ```
 
-React 的同学可能以为这是一个 React 的函数组件，其实不是，这是一个 Vue3 的函数式组件，通过 `vue-hooks-api` 包提供的 `useState`, `useReducer`, `useEffect`, `useLayoutEffect` Hooks 函数，就可以在 Vue3 的函数式组件中使用了，再通过 JSX 方式使用则看起来基本可以跟 React Hooks 一样了。
+React 的同学可能以为这是一个 React 的函数组件，其实不是，这是一个 Vue3 的函数式组件，通过 `vue-hooks-api` 包提供的 `useState`, `useReducer`, `useEffect`, `useLayoutEffect` 的 Hooks 函数，就可以在 Vue3 的函数式组件中使用了，再通过 JSX 方式使用则看起来基本可以跟 React Hooks 一样了。
 
 **关于 vue-hooks-api npm 包**
 
@@ -62,15 +62,13 @@ yarn add vue-hooks-api
 
 注意，此 npm 包目前只是一个实验性产品，旨在探讨如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks，请慎用于生产环境。
 
-下文也将围绕这个 `vue-hooks-api` npm 包如何实现的进行讲解。
+下文也将围绕这个 `vue-hooks-api` npm 包是如何实现的进行讲解。
 
 ### Hooks 是什么
 
 首先 Hooks 不是 React 特有，比如我们使用的 Git 工具，也有 Git Hooks，在把代码 push 到远程仓库之前，可以设置 Git Hooks 插件进行代码检查、代码测试，通过了 Git Hooks 的处理之后才可以把代码 push 到远程仓库。
 
-有 Hooks 的程序就像高速公路上的收费站，如果某个地方设置了收费站，那么你必须要经过收费站的处理，你才可以继续通行。
-
-没有 Hooks 的程序就像国道，你可以一路畅通无阻地通行。
+有 Hooks 的程序就像高速公路上的收费站，如果某个地方设置了收费站，那么你必须要经过收费站的处理，你才可以继续通行。没有 Hooks 的程序就像国道，你可以一路畅通无阻地通行。
 
   ![](./images/01.png)
 
@@ -84,7 +82,7 @@ Hooks 的英文翻译是 “钩子”，Vue、React 的那些生命周期函数�
 
 ### React Hooks 的本质
 
-首先 React Hooks 只可以使用在 React 的函数组件上，在 React Hooks 出现之前它是不可以存储属于自己的数据状态的，因故也不可以进行数据逻辑的复用。直到 React Hooks 的出现，在 React 的函数组件上就可以进行存储属于它自己的数据状态了，进而可以达到数据逻辑的复用。这也是 React Hooks 的作用，可以进行数据逻辑的复用。
+首先 React Hooks 只可以使用在 React 的函数组件上，在 React Hooks 出现之前 React 的函数组件是不可以存储属于自己的数据状态的，因故也不可以进行数据逻辑的复用。直到 React Hooks 的出现，在 React 的函数组件上就可以进行存储属于它自己的数据状态了，进而可以达到数据逻辑的复用。这也是 React Hooks 的作用，可以进行数据逻辑的复用。
 
 那么为什么 React 可以做到在函数组件上进行存储数据状态的呢？首先 **React 函数组件的本质是一个函数**，React   函数的更新就是重新执行 React 函数组件得到新的虚拟 DOM 数据。那么要在 React 函数组件上存储属于这个函数组件自己的数据，本质就是在一个函数上存储属于这个函数的数据，在这个函数的后续执行的时候还可以获取到它自己内部的变量数据，并且不会和其他函数组件的内部的变量数据发生冲突，**这其中最好的实现方式就是实现一个闭包函数**。
 
@@ -113,9 +111,9 @@ const result = FunctionComponent()
 result.setCount()
 ```
 
-通过上面 React Hooks 的最简模型可以知道执行组件函数 FunctionComponent 可以看成从 Hooks 返回了两个变量 count 和 setCount，count 很明显是拿来展示使用的，setCount 则是拿来给用户交互使用的，当用户执行 setCount 的时候 FunctionComponent 会重新执行。
+通过上面 React Hooks 的最简模型可以知道执行组件函数 FunctionComponent 可以看成从 Hooks 返回了两个变量 count 和 setCount，count 很明显是拿来展示使用的，setCount 则是拿来给用户交互使用的，当用户执行 setCount 的时候 FunctionComponent 会重新执行。其中关键的就是hi执行 setCount 函数的时候会重新执行 FunctionComponent 函数。
 
-上述 React Hooks 的最简模型还存在一个问题，当用户执行 setCount 的时候 FunctionComponent 重新执行的时候，hook 会被一直初始化，值不能进行迭代。那么我们知道 React 当中一个函数组件就是一个 Fiber 节点，所以可以把 hook 存储在 Fiber 节点上。
+上述 React Hooks 的最简模型还存在一个问题，当用户执行 setCount 的时候 FunctionComponent 重新执行的时候，hook 会被一直初始化，值不能进行迭代。那么我们知道 React 当中一个函数组件就是一个 Fiber 节点，所以可以把 hook 存储在 Fiber 节点上。因为 Fiber 节点变量相对于这个 Hook 函数来说，就是一个全局变量。
 
 ```javascript
 // Fiber 节点
@@ -152,39 +150,97 @@ result.setCount() // 打印 3
 
 ### 闭包函数在 React Hooks 中的实践
 
-上面的代码实现还存在一个问题，就是 useReducer 函数里的 dispatch 方法里面的 Fiber 变量目前是全局的，如果有其他函数组件也使用了 useReducer Hook 的时候，dispatch 方法里的 Fiber 变量就变成其他函数的 Fiber 节点了，之前的函数组件里的调用 dispatch 方法的时候，将不再是它自己了。所以我们需要在初始化的时候把 dispatch 方法里面的每一个 Fiber 缓存起来，将来调用的时候，还是原来的 Fiber 节点。
+上面的代码实现还存在一个问题，就是 useReducer 函数里的 dispatch 方法里面的 Fiber 变量目前是全局的，如果有其他函数组件也使用了 useReducer Hook 的时候，dispatch 方法里的 Fiber 变量就变成其他函数的 Fiber 节点了，之前的函数组件里再调用 dispatch 方法的时候，将不再是原来的 Fiber 节点了。所以我们需要在初始化的时候把 dispatch 方法里面的每一个 Fiber 缓存起来，将来调用的时候，还是原来的 Fiber 节点。
 
 上述的功能要求，其实就是闭包的参数复用的功能。
 
 ```javascript
-function Fn(p) {
-    return function () {
-        console.log(p)
+function Fn(p1) {
+    return function (p2) {
+        console.log(p1, p2)
     }
 }
 
-const f = Fn('coboy')
-f() // 打印 coboy
-f() // 打印 coboy
+const f1 = Fn('coboy')
+f1() // 打印 coboy undefined
+f1('掘金') // 打印 coboy 掘金
+const f2 = Fn('cobyte')
+f2() // 打印 cobyte undefined
+f2('稀土掘金') // 打印 cobyte 稀土掘金
 ```
 
 React 中的实现则非常巧妙了
 
 ```javascript
-function Fn(p) {
-    console.log(p)
+function Fn(p1, p2) {
+    console.log(p1, p2)
 }
 
 const f = Fn.bind(null, 'coboy')
-f() // 打印 coboy
-f() // 打印 coboy
+f() // 打印 coboy undefined
+f('掘金') // 打印 coboy 掘金
 ```
 
-这其中是什么原理呢？可以看我这篇文章《[JavaScript 中的 this 实战例题总结分析](https://juejin.cn/post/7105756630519644168)》，我在里面有详细讲解 bind 方法的实现原理。
+这其中是什么原理呢？首先 bind 方法是一个可以改变一个函数 this 指向的方法，在绑定的时候可以传递一些参数，然后返回一个函数，然后在这个返回的函数再次执行的时候，还可以传递参数，这行为动作不就是一个典型的闭包行为嘛。
+
+关于 bind 方法的实现原理可以看我掘金上的这篇文章《[JavaScript 中的 this 实战例题总结分析](https://juejin.cn/post/7105756630519644168)》，我在里面有详细讲解 bind 方法的实现原理。
+
+接下来我们对 useReducer 里面的 dispatch 函数的实现进行改动。
+
+```javascript
+// Fiber 节点
+const Fiber = {
+    type: FunctionComponent, // Fiber 节点上的 type 属性是组件函数
+    memorizedState: null // Fiber 节点上的 memorizedState 属性是 Hooks
+}
+// 改动部分开始 ===============================================================
+function useReducer(reducer, initalState) {
+    // 初始化的时候，如果 Fiber 节点的 Hooks 不存在则进行设置
+    if(!Fiber.memorizedState) Fiber.memorizedState = initalState
+    const dispatch = dispatchReducerAction.bind(null, Fiber, reducer)
+    return [Fiber.memorizedState, dispatch]
+}
+// 参数 action 就是 dispatch 函数执行的时候传递进来的参数
+function dispatchReducerAction(fiber, reducer, action) {
+    fiber.memorizedState = reducer ? reducer(fiber.memorizedState) : action;
+    fiber.type()
+}
+// 改动部分结束 ===============================================================
+// 函数组件
+function FunctionComponent() {
+    const [count, setCount] = useReducer(x => x + 1, 0)
+    console.log("渲染的count:", count) 
+    return {count, setCount}
+}
+
+const result = Fiber.type() // 打印 0
+// 执行 setCount 会从新执行 FunctionComponent
+result.setCount() // 打印 1
+result.setCount() // 打印 2
+result.setCount() // 打印 3
+```
+
+我们可以看到 dispatchReducerAction 方法有一个 action 参数是在进行 bind 方法绑定的时候没有进行设置的，那么这个 action 参数是在什么时候设置的呢？我们上面的注释已经进行解析了，是在 dispatch 函数执行的时候设置的。也就是上述代码中的 result.setCount() 方法执行的时候，还可以传递参数，例如这样：result.setCount('cobyte')，这个其实就是 Hook 函数 useState() 方法做的事情。
+
+### useState 的实现
+
+useState 的实现其实很简单，就是在 useReducer 的基础上实现的。
+
+```javascript
+export function useState(initalState) {
+  return useReducer(null, initalState);
+}
+```
+
+useState 就是一个没有 reducer 参数的 useReducer。
+
+### 承上启下的小结
+
+到目前为止，我们已经基本搞清楚 React Hooks 的实现最基本的原理了，但经常出现在各大面经中的 React Hooks 链接，我们还没涉及到。在上面的代码中，我们只在函数组件里使用了一个 Hooks，但实际开发中，我们是会同时使用多个 Hooks 的，使用到多个 Hooks 的时候，怎么存储这些 Hooks 就是一个值得思考的问题了，而 React 中就使用了 链表来存储这些 Hooks，那么下面让我们进入 React Hooks 的链表环节吧。
 
 ### React Hooks 的链表
 
-在上面的代码中，我们只在函数组件里使用了一个 Hooks，但实际开发中，我们是会同时使用多个 Hooks 的。例如：
+在实际开发中，我们是会同时使用多个 Hooks 的。例如：
 
 ```javascript
 // 函数组件
