@@ -132,8 +132,16 @@ function areHookInputsEqual(nextDeps: any, prevDeps: any) {
 
 function invokeHooks(hookFlags: any, hook: any) {
   if (hookFlags & HookPassive) {
-    watchEffect(hook.memorizedState.create, { flush: "post" });
+    postMessage(hook.memorizedState.create);
   } else if (hookFlags & HookLayout) {
-    watchEffect(hook.memorizedState.create, { flush: "pre" });
+    watchEffect(hook.memorizedState.create, { flush: "post" });
   }
 }
+
+const postMessage = (create: any) => {
+  const { port1, port2 } = new MessageChannel();
+  port1.onmessage = () => {
+    create();
+  };
+  port2.postMessage(null);
+};
