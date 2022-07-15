@@ -587,3 +587,14 @@ const FunctionalComponent = (props, context) => {
 
 ### 总结
 
+今晚 9 点我受邀将在 B 站拥有 2.2 万粉丝的前端 up 主 -- 前端杨村长 的直播间进行一个主题讲解。
+
+我的讲解内容是：
+
+讲解者： Cobyte
+主题：在 Vue3 中实现 React-style 的 Hooks（useState、useEffect）进而深入理解函数组件 Hooks 的本质原理
+
+摘要：
+1.讲解作者发布的一个 npm 包：`vue-hooks-api` 的功能使用
+2.`vue-hooks-api` 包的性质：一个可使用于 Vue3 函数组件的 React 风格的 Hooks 工具函数库
+3.探讨 React Hooks 的本质原理及 Vue3 的运行原理
