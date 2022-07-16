@@ -579,6 +579,23 @@ const FunctionalComponent = (props, context) => {
 
 在这其中有一个关键的点就是渲染组件的时候会创建一个组件实例，这个跟 React 的函数组件的 Fiber 对象其实是相同的角色的，都是一个管家，管理着这个组件的相关状态和动作。那么 React Hooks 是把相关 Hooks 信息保存在 Fiber 节点上的，那么 Vue3 则可以把 Hooks 相关信息保存到组件的实例对象上。
 
+**实践中需要注意的地方**
+
+React 是在每次执行函数组件方法之前，初始化 Hooks 的相关信息的，但我们是在 Vue3 框架之外去写的一个库，所以我们只能通过 Vue3 提供的 API 去实现我们的功能。首先我们可以通过 `getCurrentInstance` 这个 API 获取到当前函数组件的实例对象。我们是没办法在初始执行函数组件渲染之前对进行 Hooks 的初始化工作的，所以我们只能在获取 Hooks 的时候去进行 Hooks 的相关的初始化。
+
+```javascript
+function updateWorkInProgressHook() {
+  const instance = getCurrentInstance() as any;
+  if (
+    !currentlyRenderingFiber ||
+    currentlyRenderingFiber.uid !== instance.uid
+  ) {
+    renderHooks(instance);
+  }
+    // ...
+}
+```
+
 
 
 ### React 的调度任务为什么选择使用 MessageChannel 实现
@@ -604,3 +621,5 @@ const postMessage = (create) => {
 ### 总结
 
 
+
+vue-hooks-api 库的 GitHub 地址：https://github.com/amebyte/vue-hooks-api
