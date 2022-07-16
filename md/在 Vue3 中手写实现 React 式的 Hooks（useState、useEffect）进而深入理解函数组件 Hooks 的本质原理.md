@@ -573,7 +573,12 @@ const FunctionalComponent = (props, context) => {
 
 ### 如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks
 
-通过上文我们了解了 React 的 Hooks 的实现基本原理，就是把 Hooks 的相关信息存储到相应的函数组件的 Fiber 节点上，那么对应过来 Vue3 这样边呢？这就需要我们了解 Vue3 的运行原理了。
+通过上文我们了解了 React 的 Hooks 的实现基本原理，就是把 Hooks 的相关信息存储到相应的函数组件的 Fiber 节点上，那么对应过来 Vue3 这样边呢？这就需要我们了解一下 Vue3 的组件运行原理了。其中详细可以通过我这篇掘金文章《[大话Vue3的源码的主流程解析](https://juejin.cn/post/7051947597434470408)》进行了解。
+
+不管我们写的是 SFC 组件还是 JSX 组件，最终会被编译成一个对象，这个对象上就有我们设置的 setup 方法，还有 render 方法，其中 SFC 组件的 render 是通过 template 模板编译出来的。然后再创建这个组件的虚拟DOM，再去渲染这个渲染 DOM，然后在渲染这个虚拟 DOM 的时候，如果是组件类型的虚拟 DOM 则需要创建组件实例，然后再执行组件实例上 render 方法获取组件的虚拟 DOM，然后再去渲染这个虚拟DOM，直到把所有的虚拟 DOM 渲染完毕，最后浏览器展示渲染的内容。
+
+在这其中有一个关键的点就是渲染组件的时候会创建一个组件实例，这个跟 React 的函数组件的 Fiber 对象其实是相同的角色的，都是一个管家，管理着这个组件的相关状态和动作。那么 React Hooks 是把相关 Hooks 信息保存在 Fiber 节点上的，那么 Vue3 则可以把 Hooks 相关信息保存到组件的实例对象上。
+
 
 
 ### React 的调度任务为什么选择使用 MessageChannel 实现
@@ -598,14 +603,4 @@ const postMessage = (create) => {
 
 ### 总结
 
-今晚 9 点我受邀将在 B 站拥有 2.2 万粉丝的前端 up 主 -- 前端杨村长 的直播间进行一个主题讲解。
 
-我的讲解内容是：
-
-讲解者： Cobyte
-主题：在 Vue3 中实现 React-style 的 Hooks（useState、useEffect）进而深入理解函数组件 Hooks 的本质原理
-
-摘要：
-1.讲解作者发布的一个 npm 包：`vue-hooks-api` 的功能使用
-2.`vue-hooks-api` 包的性质：一个可使用于 Vue3 函数组件的 React 风格的 Hooks 工具函数库
-3.探讨 React Hooks 的本质原理及 Vue3 的运行原理
