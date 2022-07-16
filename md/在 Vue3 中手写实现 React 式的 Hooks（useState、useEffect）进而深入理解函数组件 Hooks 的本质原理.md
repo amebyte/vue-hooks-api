@@ -571,6 +571,11 @@ const FunctionalComponent = (props, context) => {
 
 无论是普通的对象形式的组件还是函数形式的组件都是存储在虚拟 DOM 的 type 属性上的，然后在创建虚拟 DOM 之后，会对虚拟 DOM 的 type 属性进行判断，如果是对象则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.STATEFUL_COMPONENT`  的标记，表示这是一个状态组件，如果虚拟 DOM 的 type 属性是函数的话则给虚拟 DOM 的 shapeFlag 属性挂上一个 `ShapeFlags.FUNCTIONAL_COMPONENT` 的标记，表示这是一个函数组件。在将来执行的时候如果是状态组件就执行状态组件的 render 函数获取组件的虚拟 DOM，如果是组件函数则直接执行它自己获取组件的虚拟 DOM。
 
+### 如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks
+
+
+
+
 ### React 的调度任务为什么选择使用 MessageChannel 实现
 
 首先是为了产生宏任务，因为只要宏任务才可以做到让出当前的主线程，交还给浏览器执行更新页面的任务，在浏览器执行完更新页面之后，可以继续执行未完成的任务。而微任务是在当前任务执行的最后执行的，而且需要执行完当前执行栈产生的所有微任务才会把主线程让给浏览器，这样就做不到 React 需要实现的效果了，每执行一个更新任务，需要把这个更新任务更新的页面内容呈现给用户之后，再进行下一个更新任务。
@@ -579,11 +584,17 @@ const FunctionalComponent = (props, context) => {
 
 为什么不使用 requestAnimationFrame 呢？因为 requestAnimationFrame 是一帧只执行一次。这是什么概念呢？主流浏览器刷新频率为60Hz，即每（1000ms / 60Hz）16.6ms 浏览器刷新一次。也就是说使用 requestAnimationFrame 的话，就可能会产生 16.6ms 的延迟，这比 setTimeout 的默认 4ms 的延迟造成的性能浪费更大了。有 4ms 延迟的 setTimeout，React 团队都不能接受，那么高达 16.6ms 延迟的 requestAnimationFrame，React 团队更不可能接受了。另外 requestAnimationFrame 也存在兼容性问题，所以更不可能使用 requestAnimationFrame 了。
 
-### 如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks
+在 Vue3 中是没有宏任务的，Vue3 的异步任务，例如：nextTick 是一个微任务，所以使用 nextTick 是没办法达到我们想要的效果的，同时为了还原跟 React 一样，我们同样使用 MessageChannel 来进行 useEffect 的异步回调。
 
-
-
-
+```javascript
+const postMessage = (create) => {
+  const { port1, port2 } = new MessageChannel();
+  port1.onmessage = () => {
+    create();
+  };
+  port2.postMessage(null);
+};
+```
 
 ### 总结
 
