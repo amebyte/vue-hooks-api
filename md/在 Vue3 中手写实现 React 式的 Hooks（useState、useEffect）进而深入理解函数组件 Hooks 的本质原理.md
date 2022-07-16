@@ -573,7 +573,7 @@ const FunctionalComponent = (props, context) => {
 
 ### 如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks
 
-
+通过上文我们了解了 React 的 Hooks 的实现基本原理，就是把 Hooks 的相关信息存储到相应的函数组件的 Fiber 节点上，那么对应过来 Vue3 这样边呢？这就需要我们了解 Vue3 的运行原理了。
 
 
 ### React 的调度任务为什么选择使用 MessageChannel 实现
