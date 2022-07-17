@@ -41,11 +41,11 @@ function updateWorkInProgressHook() {
   if (current) {
     currentlyRenderingFiber.memorizedState = current.memorizedState;
     if (workInProgressHook) {
-      // not head
+      // 不是头节点
       hook = workInProgressHook = workInProgressHook.next;
       currentHook = currentHook.next;
     } else {
-      // head hook
+      // 头节点
       hook = workInProgressHook = current.memorizedState;
       currentHook = current.memorizedState;
     }
@@ -57,10 +57,10 @@ function updateWorkInProgressHook() {
     };
 
     if (workInProgressHook) {
-      // not head
+      // 不是头节点
       workInProgressHook = workInProgressHook.next = hook;
     } else {
-      // head hook
+      // 头节点
       workInProgressHook = currentlyRenderingFiber.memorizedState = hook;
     }
   }
@@ -78,7 +78,7 @@ export function useReducer(reducer: any, initalState: any) {
   if (!currentlyRenderingFiber.alternate) {
     hook.memorizedState = initalState;
   }
-
+  // 通过 bind 方法进行缓存当前的组件函数的 Fiber 节点，Vue3 中则是函数组件的实例对象
   const dispatch = dispatchReducerAction.bind(
     null,
     currentlyRenderingFiber,
@@ -101,6 +101,7 @@ function dispatchReducerAction(
 
 function updateEffectImp(hookFlags: any, create: any, deps: any) {
   const hook = updateWorkInProgressHook();
+  // 如果存在老 Hook 则进行对比
   if (currentHook) {
     const prevEffect = currentHook.memorizedState;
     if (deps) {
@@ -124,6 +125,7 @@ export function useLayoutEffect(create: any, deps: any) {
   return updateEffectImp(HookLayout, create, deps);
 }
 
+// 比较前后两个依赖是否发生变化
 function areHookInputsEqual(nextDeps: any, prevDeps: any) {
   if (prevDeps === null) {
     return false;
@@ -138,6 +140,7 @@ function areHookInputsEqual(nextDeps: any, prevDeps: any) {
   return true;
 }
 
+// 调用 Hooks
 function invokeHooks(hookFlags: any, hook: any) {
   if (hookFlags & HookPassive) {
     postMessage(hook.memorizedState.create);
@@ -146,6 +149,7 @@ function invokeHooks(hookFlags: any, hook: any) {
   }
 }
 
+// 通过 MessageChannel 创建一个宏任务
 const postMessage = (create: any) => {
   const { port1, port2 } = new MessageChannel();
   port1.onmessage = () => {
