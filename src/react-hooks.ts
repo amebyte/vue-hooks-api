@@ -12,18 +12,21 @@ let workInProgressHook: any = null;
 // 前一个 Hook
 let currentHook: any = null;
 
+// React 中启动一个 Fiber 协调的任务
 function scheduleUpdateOnFiber(wip: any) {
   currentlyRenderingFiber.alternate = { ...currentlyRenderingFiber };
   renderHooks(wip);
   currentlyRenderingFiber.update();
 }
 
+// 初始化 Hooks 的相关设置
 function renderHooks(wip: any) {
   currentlyRenderingFiber = wip;
   currentlyRenderingFiber.memorizedState = null;
   workInProgressHook = null;
 }
 
+// Hooks 设置
 function updateWorkInProgressHook() {
   const instance = getCurrentInstance() as any;
   if (
