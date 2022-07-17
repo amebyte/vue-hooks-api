@@ -4,9 +4,9 @@
 
 首先本文不会过度深入讲解只属于 React 或者只属于 Vue 的原理，所以只懂 React 或者只懂 Vue 的同学都可以畅通无阻地阅读本文。
 
-关于 Vue3 的 React 式 Hooks 的实现原理和 React Hooks 的实现原理在社区里已经有很多讨论的文章了，希望本文可以给你不一样的角度去理解 React Hooks 的本质原理，也只有理解了 React Hooks 实现的本质原理，才可以在 Vue3 的函数式组件上实现跟 React Hooks 一样的 Hooks 函数，例如： useState、useReducer、useEffect 、useLayoutEffect 等。
+关于 Vue3 的 React-style Hooks 的实现原理和 React Hooks 的实现原理在社区里已经有很多讨论的文章了，希望本文可以给你不一样的角度去理解 React Hooks 的本质原理，也只有理解了 React Hooks 实现的本质原理，才可以在 Vue3 的函数式组件上实现跟 React Hooks 一样的 Hooks 函数，例如： useState、useReducer、useEffect 、useLayoutEffect 等。
 
-关于 Vue3 的 React 式 Hooks，Vue.js 核心团队成员 Anthony Fu 也出了一个 Vue Hooks 工具库 VueUse，但本文不是去探讨 VueUse 的实现原理，而是通过实现一个 Vue3 函数式组件的 Hooks 去了解 React Hooks 的本质原理。本文更多的想探讨 React Hooks 的本质原理，同时在实现 Vue3  函数式组件 Hooks 的过程也进一步理解 Vue3 的运行原理和调度原理等。
+关于 Vue3 的 React-style Hooks，Vue.js 核心团队成员 Anthony Fu 也出了一个 Vue Hooks 工具库 VueUse，但本文不是去探讨 VueUse 的实现原理，而是通过实现一个 Vue3 函数式组件的 Hooks 去了解 React Hooks 的本质原理。本文更多的想探讨 React Hooks 的本质原理，同时在实现 Vue3  函数式组件 Hooks 的过程也进一步理解 Vue3 的运行原理和调度原理等。
 
 Vue3 的函数式组件或许很多人了解得不多，因为 Vue 官方也不推荐使用，所以通过本文你不但可以了解 React Hooks 的原理，也希望给 Vue 阵营的同学也可以提供一下关于 Vue3 函数式组件的知识。
 
@@ -60,7 +60,7 @@ React 的同学可能以为这是一个 React 的函数组件，其实不是，�
 yarn add vue-hooks-api
 ```
 
-注意，此 npm 包目前只是一个实验性产品，旨在探讨如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks，请慎用于生产环境。
+**注意，此 npm 包目前只是一个实验性产品，旨在探讨如何在 Vue3 的函数组件中实现 React 式的函数组件 Hooks，请慎用于生产环境。**
 
 下文也将围绕这个 `vue-hooks-api` npm 包是如何实现的进行讲解。
 
@@ -595,7 +595,13 @@ function updateWorkInProgressHook() {
     // ...
 }
 ```
-在后续其他函数组件也使用了 Hooks 的话，我们需要进行重新初始化，那么怎么知道是其他函数组件进行了调用呢？在 Vue3 的组件进行实例化的时候就会给每一个组件实例对象赋值一个唯一的 uid，这个 uid 主要作用是用来确保在渲染队列中父组件是一定最先进行渲染的。这个就涉及到 Vue3 的调度任务的相关知识了，可以点击我在掘金上的这篇文章《[Vue3生命周期Hooks的原理及其与调度器(Scheduler)的关系](https://juejin.cn/post/7093880734246502414)》进行详细了解。
+在后续其他函数组件也使用了 Hooks 的话，我们需要进行重新初始化，那么怎么知道是其他函数组件进行了调用呢？在 Vue3 的组件进行实例化的时候就会给每一个组件实例对象赋值一个唯一的 uid，这个 uid 主要作用是用来确保在渲染队列中父组件是一定最先进行渲染的。
+
+根据上文我们可以知道 useEffect 和 uselayoutEffect 的实现基本一致，主要的区别是是回调函数的执行时机不一样，useLayoutEffect 是组件渲染之后立即执行的，而 useEffect 则是在下一轮宏任务执行的时候再执行。
+
+在 Vue3 中如果需要将一个函数在组件渲染之后进行执行，则需要使用 watchEffect API，其中 options 的 flush 设置为 “post”，本质是渲染之后的 post 队列里面添加一个执行任务，从而达到跟 React 的 useEffect 的回调执行机制基本一致。
+
+这个就涉及到 Vue3 的调度任务的相关知识了，可以点击我在掘金上的这篇文章《[Vue3生命周期Hooks的原理及其与调度器(Scheduler)的关系](https://juejin.cn/post/7093880734246502414)》进行详细了解。
 
 
 ### React 的调度任务为什么选择使用 MessageChannel 实现
@@ -620,6 +626,12 @@ const postMessage = (create) => {
 
 ### 总结
 
+本文主要讲了如何在 Vue3 的函数组件中实现 React 风格的 Hooks，首先我们需要了解 React Hooks 的实现基本原理，只有了解了 React Hooks 的实现基本原理才可以在 Vue3 的函数组件中实现 React 风格的 Hooks。
 
+那么 React Hooks 的基本原理就是通过把 Hooks 的相关信息存储在对应的函数组件的 Fiber 节点上，其中 Hooks 的数据结构是一个链接结构，由于这个链接的结构使得 React Hooks 的使用有一定的限制，必须顺序使用和必须在函数组件顶部使用。其中需要使用闭包把对应的函数组件的 Fiber 对象进行缓存起来。
 
-vue-hooks-api 库的 GitHub 地址：https://github.com/amebyte/vue-hooks-api
+useEffect 和 uselayoutEffect 的实现基本一致，主要的区别是是回调函数的执行时机不一样，useLayoutEffect 是组件渲染之后立即执行的，而 useEffect 则是在下一轮宏任务执行的时候再执行。
+
+我们想要在 Vue3 的函数组件上实现相同的功能，则是把 Hooks 的相关信息存储在对应的函数组件的实例对象上。另外在 Vue3 中如果需要将一个函数在组件渲染之后进行执行，则需要使用 watchEffect API，其中 options 的 flush 设置为 “post”，本质是渲染之后的 post 队列里面添加一个执行任务，从而达到跟 React 的 useEffect 的回调执行机制基本一致。useEffect 我们则跟 React 一样使用 MessageChannel 来创建一个宏任务来进行回调任务的执行。
+
+更加详细的代码设计请查看 vue-hooks-api 库的 GitHub 地址：https://github.com/amebyte/vue-hooks-api
