@@ -1,10 +1,15 @@
 import { getCurrentInstance, watchEffect } from "vue";
 
+// useLayoutEffect 的标记
 const HookLayout = /*    */ 0b010;
+// useEffect 的标记
 const HookPassive = /*   */ 0b100;
 
+// 当前的渲染的 Fiber 节点，对应 Vue 中则是当前渲染的组件函数的实例
 let currentlyRenderingFiber: any = null;
+// 当前正在工作的 Hook 节点
 let workInProgressHook: any = null;
+// 前一个 Hook
 let currentHook: any = null;
 
 function scheduleUpdateOnFiber(wip: any) {
