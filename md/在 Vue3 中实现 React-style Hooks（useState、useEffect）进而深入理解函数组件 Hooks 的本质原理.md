@@ -536,9 +536,9 @@ function invokeHooks(wip) {
 
 ### 小结：简述 React Hooks 的实现原理
 
-React Hooks 的实现原理就是把相应的函数组件里面使用的 Hooks 产生的状态逻辑数据**通过链表形式**挂载到对应的函数组件的 Fiber 节点上。其中 **useState 是在 useReducer 的基础上实现的**，useReducer 里面返回的 dispatch 函数是**通过闭包的形式**把相应的 Fiber 节点进行了缓存，在将来用户进行调用相应的 dispatch 函数时，依然可以触发对应的函数组件的 Fiber 节点进行更新。
+React Hooks 的实现原理就是把相应的函数组件里面使用的 Hooks 产生的状态逻辑数据**通过链表的数据结构**挂载到对应的函数组件的 Fiber 节点上。其中 **useState 是在 useReducer 的基础上实现的**，useReducer 里面返回的 dispatch 函数是**通过闭包的形式**把相应的 Fiber 节点进行了缓存，在将来用户进行调用相应的 dispatch 函数时，依然可以触发对应的函数组件的 Fiber 节点进行更新。
 
-useEffect、useLayoutEffect 的实现方式是基本一致的，它们的主要区别是它们的回调函数的执行时机的不同。useLayoutEffect 是在函数组件渲染完成后立即调用的，而 useEffect 的回调函数则是进行一个异步的宏任务的调度，也就是在下一轮的任务执行的时候才进行调用。
+useEffect、useLayoutEffect 的实现方式是基本一致的，它们的主要区别是它们的回调函数的执行时机的不同。useLayoutEffect 是在函数组件渲染完成后立即调用的，而 useEffect 的回调函数则是进行一个异步的宏任务的调度，也就是在下一轮的任务执行的时候才进行调用。这样做主要是因为 useEffect 使用了 React 的调度器 Scheduler 来进行调度 useEffect 的回调函数，而 React 的调度采用宏任务进行调度因为让浏览器在执行下一次任务之前有机会进行更新页面，而只要宏任务才能实现这一需求。
 
 
 
