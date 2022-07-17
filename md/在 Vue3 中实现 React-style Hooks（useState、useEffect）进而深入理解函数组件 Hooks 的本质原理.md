@@ -635,3 +635,4 @@ useEffect 和 uselayoutEffect 的实现基本一致，主要的区别是是回�
 我们想要在 Vue3 的函数组件上实现相同的功能，则是把 Hooks 的相关信息存储在对应的函数组件的实例对象上。另外在 Vue3 中如果需要将一个函数在组件渲染之后进行执行，则需要使用 watchEffect API，其中 options 的 flush 设置为 “post”，本质是渲染之后的 post 队列里面添加一个执行任务，从而达到跟 React 的 useEffect 的回调执行机制基本一致。useEffect 我们则跟 React 一样使用 MessageChannel 来创建一个宏任务来进行回调任务的执行。
 
 更加详细的代码设计实现请查看 vue-hooks-api 库的 GitHub 地址：https://github.com/amebyte/vue-hooks-api
+

@@ -14,6 +14,7 @@ let currentHook: any = null;
 
 // React 中启动一个 Fiber 协调的任务
 function scheduleUpdateOnFiber(wip: any) {
+  // 保存老 Fiber
   currentlyRenderingFiber.alternate = { ...currentlyRenderingFiber };
   renderHooks(wip);
   currentlyRenderingFiber.update();
@@ -35,9 +36,10 @@ function updateWorkInProgressHook() {
   ) {
     renderHooks(instance);
   }
-
+  // alternate 是老 Fiber 的属性 
   const current = currentlyRenderingFiber.alternate;
   let hook;
+  // 存在老的则是更新节点
   if (current) {
     currentlyRenderingFiber.memorizedState = current.memorizedState;
     if (workInProgressHook) {
@@ -50,6 +52,7 @@ function updateWorkInProgressHook() {
       currentHook = current.memorizedState;
     }
   } else {
+    // 初始化
     currentHook = null;
     hook = {
       memorizedState: null,
@@ -73,6 +76,7 @@ export function useState(initalState: any) {
 }
 
 export function useReducer(reducer: any, initalState: any) {
+  // 获取 Hook
   const hook = updateWorkInProgressHook();
 
   if (!currentlyRenderingFiber.alternate) {
@@ -96,10 +100,12 @@ function dispatchReducerAction(
   action: any
 ) {
   hook.memorizedState = reducer ? reducer(hook.memorizedState) : action;
+  // 调用 dispatch 的时候重新执行函数组件的渲染
   scheduleUpdateOnFiber(fiber);
 }
 
 function updateEffectImp(hookFlags: any, create: any, deps: any) {
+  // 获取 Hook
   const hook = updateWorkInProgressHook();
   // 如果存在老 Hook 则进行对比
   if (currentHook) {
