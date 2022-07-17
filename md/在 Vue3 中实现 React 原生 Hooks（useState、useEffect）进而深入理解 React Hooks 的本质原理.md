@@ -1,4 +1,4 @@
-# 在 Vue3 中实现 React-style Hooks（useState、useEffect）进而深入理解函数组件 Hooks 的本质原理
+# 在 Vue3 中实现 React 原生 Hooks（useState、useEffect）进而深入理解 React Hooks 的本质原理
 
 ### 前言
 
